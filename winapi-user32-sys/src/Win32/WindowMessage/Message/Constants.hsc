@@ -8,7 +8,6 @@ import Foreign.Ptr
 import Win32.Types
 
 #include <Windows.h>
-##include "windows_cconv.h"
 
 pattern WM_NULL :: (Eq a, Num a) => a
 pattern WM_NULL                       = 0x0000

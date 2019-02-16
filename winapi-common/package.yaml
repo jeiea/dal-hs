@@ -28,7 +28,6 @@ ghc-options:
 library:
   source-dirs: src
   exposed-modules: Win32.Types
-  include-dirs: include
 
 tests:
   winapi-common-test:

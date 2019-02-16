@@ -27,7 +27,6 @@ ghc-options:
 
 library:
   source-dirs: src
-  include-dirs: include
   dependencies: winapi-common
   reexported-modules: winapi-common:Win32.Types
   extra-libraries:

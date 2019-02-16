@@ -14,7 +14,6 @@ import Win32.WindowMessage.Message.Constants
 import Win32.GDI
 
 #include <Windows.h>
-##include "windows_cconv.h"
 
 ----------------------------------------------------------------
 -- MSGs and event loops

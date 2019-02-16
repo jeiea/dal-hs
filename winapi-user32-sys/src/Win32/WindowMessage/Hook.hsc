@@ -10,8 +10,6 @@ import Foreign.C
 import Foreign.Ptr
 import Win32.Types
 
-##include "windows_cconv.h"
-
 #include <Windows.h>
 
 newtype WHKind = WHKind LONG deriving (Eq, Ord, Show)

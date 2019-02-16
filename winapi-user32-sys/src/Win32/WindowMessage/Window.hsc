@@ -9,8 +9,6 @@ import Foreign.Ptr
 import Win32.Types
 import Win32.GDI
 
-##include "windows_cconv.h"
-
 #include <Windows.h>
 
 

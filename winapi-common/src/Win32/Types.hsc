@@ -19,7 +19,6 @@ import Data.Word (Word)
 #endif
 
 #include <Windows.h>
-##include "windows_cconv.h"
 
 ----------------------------------------------------------------
 -- Platform specific definitions

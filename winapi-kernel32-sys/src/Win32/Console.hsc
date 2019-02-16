@@ -11,7 +11,6 @@ import Foreign.C
 import Data.Bits
 
 #include <Windows.h>
-##include "windows_cconv.h"
 
 pattern CTRL_C_EVENT        = #{const CTRL_C_EVENT}
 pattern CTRL_BREAK_EVENT    = #{const CTRL_BREAK_EVENT}
