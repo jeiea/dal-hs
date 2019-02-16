@@ -157,7 +157,7 @@ keyProc keyProcCtx code w l = do
     (toInteger $ kdhs_time kb) (toInteger $ dwExtraInfo kb)
     (if w == WM_KEYDOWN then "WM_KEYDOWN" else "WM_KEYUP" :: Text)
   name <- bracketWin32 $ getKeyNameText (fromIntegral $ kdhsToLParam kb)
-  printf name
+  printf "%s\n" name
 
   if dwExtraInfo kb /= 0 then toss else do
     modifyIORef keyProcCtx (\cx -> cx {wParam = w, kb = kb, toss = toss})
@@ -180,7 +180,7 @@ messageLoop :: (HasLogFunc env) => LPMSG -> RIO env ()
 messageLoop wm = do
   r <- getMessage wm Nothing (0, 0)
   when r $ do
-    logDebug $ displayShow wm
+    logDebug $ displayShow wm <> display ("\r\n" :: Text)
     --translateMessage wm
     _ <- dispatchMessage wm
     messageLoop wm
