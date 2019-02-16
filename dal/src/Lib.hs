@@ -44,20 +44,19 @@ registerCtrlC = do
   conIn <- getStdHandle STD_INPUT_HANDLE
   setConsoleMode conIn ENABLE_PROCESSED_INPUT
 
-
--- sendKey :: WORD -> IO UINT
+sendKey :: WORD -> IO UINT
 sendKey vk = do
-  sc <- mapVirtualKey (fromIntegral vk) MAPVK_VK_TO_VSC
+  sc <- mapVirtualKey vk MAPVK_VK_TO_VSC
   sendInput
-    [ KINPUT $ KEYBDINPUT (fromIntegral vk) (fromIntegral sc) 0 0 1
-    , KINPUT $ KEYBDINPUT (fromIntegral vk) (fromIntegral sc) KEYEVENTF_KEYUP 0 1
+    [ KINPUT $ KEYBDINPUT vk (fromIntegral sc) 0 0 1
+    , KINPUT $ KEYBDINPUT vk (fromIntegral sc) KEYEVENTF_KEYUP 0 1
     ]
 
 sendSpaceKey :: IO UINT
 sendSpaceKey = sendKey VK_SPACE
 
 sendKdhs :: KBDLLHOOKSTRUCT -> IO UINT
-sendKdhs kb@KBDLLHOOKSTRUCT{..} = sendInput $ KINPUT <$>
+sendKdhs KBDLLHOOKSTRUCT{..} = sendInput $ KINPUT <$>
   [ kdhs extended 0 1
   , kdhs (KEYEVENTF_KEYUP .|. extended) 0 1
   ] where
@@ -65,7 +64,7 @@ sendKdhs kb@KBDLLHOOKSTRUCT{..} = sendInput $ KINPUT <$>
     extended = flags .&. 1
 
 sendBigCtrlKey :: KBDLLHOOKSTRUCT -> IO UINT
-sendBigCtrlKey kb@KBDLLHOOKSTRUCT{..} = sendInput $ KINPUT <$>
+sendBigCtrlKey KBDLLHOOKSTRUCT{..} = sendInput $ KINPUT <$>
   [ control 0 0 1
   , moded extended 0 1
   , moded (KEYEVENTF_KEYUP .|. extended) 0 1
@@ -82,12 +81,13 @@ initialHandler ctx@KeyProcCtx{..} = next where
     else toss
 
 enterBigCtrlMode :: KeyboardProc
-enterBigCtrlMode ctx@KeyProcCtx{..} = do
+enterBigCtrlMode KeyProcCtx{..} = do
   modifyIORef self $ \cx -> cx
     { spacePressTime = Just $ kdhs_time kb
     , delegate = bigCtrlHandler }
   return 1
 
+isModifier :: (Eq a, Num a) => a -> Bool
 isModifier vk = vk `elem`
   [ VK_MENU
   , VK_SHIFT, VK_LSHIFT, VK_RSHIFT
@@ -111,7 +111,7 @@ bigCtrlHandler ctx@KeyProcCtx{..} =
           writeIORef self ctx
             { kdhsAfterSpace = delete normalized $ toList kdhsAfterSpace
             , spacePressTime = Nothing }
-          sendBigCtrlKey kb
+          _ <- sendBigCtrlKey kb
           return 1
         else toss
   where
@@ -119,7 +119,7 @@ bigCtrlHandler ctx@KeyProcCtx{..} =
     normalized = kb {flags = 0, kdhs_time = 0, dwExtraInfo = 0}
 
 exitBigCtrlMode :: KeyboardProc
-exitBigCtrlMode ctx@KeyProcCtx{..} = do
+exitBigCtrlMode KeyProcCtx{..} = do
   _ <- sequence $ sendKdhs <$> reverse kdhsAfterSpace
   modifyIORef self $ \cx -> cx
     { delegate = initialHandler
@@ -192,6 +192,6 @@ messagePump = do
   liftIO $ alloca loop
 
 interruptHandler :: DWORD -> DWORD -> IO Bool
-interruptHandler mainThreadId dw = do
+interruptHandler mainThreadId _dw = do
   postThreadMessage mainThreadId WM_QUIT 0 0
   return True

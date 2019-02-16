@@ -25,7 +25,7 @@ ghc-options:
 flags:
   dev:
     description: Make subsystem to console for debugging.
-    manual: True
+    manual: False
     default: False
 
 dependencies:
@@ -47,6 +47,9 @@ library:
 executable:
   main: app/Main.hs
   dependencies: dal
+  when:
+    - condition: "!flag(dev)"
+      ghc-options: -optl-Wl,--subsystem,windows
 
 tests:
   dal-test:

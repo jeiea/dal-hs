@@ -66,8 +66,8 @@ getLastError = liftIO c_GetLastError
 formatMessage :: MonadIO m => DWORD -> m String
 formatMessage err = do
   liftIO $ alloca $ \p -> do
-    written <- c_FormatMessageW (FORMAT_MESSAGE_ALLOCATE_BUFFER .|. FORMAT_MESSAGE_FROM_SYSTEM)
-      (fromIntegral 0) err 0 (castPtr p) 0 0
+    let flags = FORMAT_MESSAGE_ALLOCATE_BUFFER .|. FORMAT_MESSAGE_FROM_SYSTEM
+    written <- c_FormatMessageW flags 0 err 0 (castPtr p) 0 0
     ps <- peek p
     if written == 0 then return "" else peekCWString (castPtr ps)
 
