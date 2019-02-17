@@ -6,7 +6,7 @@
     {
       "label": "stack build",
       "type": "shell",
-      "command": "stack build --flag dal:dev",
+      "command": "stack build --fast --flag dal:dev",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
