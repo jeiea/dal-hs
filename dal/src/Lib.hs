@@ -18,14 +18,26 @@ import Win32.User32 hiding (wParam)
 
 main :: IO ()
 main = do
-  lo <- logOptionsHandle stdout False
   ctx <- newSomeRef initialContext
-  withLogFunc lo $ \lf ->
+  withEmptyLogFuncIfNoConsole $ \lf ->
     let app = App
           { logFunc = lf
           , context = ctx
           }
     in runRIO app run
+
+withEmptyLogFuncIfNoConsole :: (LogFunc -> IO ()) -> IO ()
+withEmptyLogFuncIfNoConsole logWriter = do
+  outHandle <- getStdHandle STD_OUTPUT_HANDLE
+  outMode <- try $ getConsoleMode outHandle
+  case outMode of
+    Left (W32FailException _) -> logWriter emptyLogger
+    Right _ -> do
+      lo <- logOptionsHandle stdout False
+      withLogFunc lo logWriter
+
+emptyLogger :: LogFunc
+emptyLogger = mkLogFunc (\_ _ _ _ -> return ())
 
 initialContext :: KeyProcCtx
 initialContext = KeyProcCtx Nothing [] initialHandler
@@ -40,7 +52,7 @@ run = do
 
   messagePump
   unhookWindowsHookEx hHook
-  logInfo "quit.\n"
+  logI "quit.\n"
 
 registerCtrlC :: IO ()
 registerCtrlC = do

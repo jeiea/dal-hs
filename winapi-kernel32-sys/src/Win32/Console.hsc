@@ -33,6 +33,9 @@ pattern ENABLE_AUTO_POSITION   = ConsoleMode #{const ENABLE_AUTO_POSITION}
 pattern ENABLE_PROCESSED_OUTPUT   = ConsoleMode (#{const ENABLE_PROCESSED_OUTPUT})
 pattern ENABLE_WRAP_AT_EOL_OUTPUT = ConsoleMode (#{const ENABLE_WRAP_AT_EOL_OUTPUT})
 
+foreign import WINDOWS_CCONV "Windows.h GetConsoleMode"
+  c_GetConsoleMode :: HANDLE -> LPDWORD -> IO BOOL
+
 foreign import WINDOWS_CCONV "Windows.h SetConsoleMode"
   c_SetConsoleMode :: HANDLE -> DWORD -> IO BOOL
 

@@ -23,6 +23,14 @@ instance Exception Win32FailException
 -- kernel32
 
 -- Console
+getConsoleMode :: (MonadUnliftIO m, MonadThrow m) => W.HANDLE -> m W.DWORD
+getConsoleMode conHandle = withRunInIO $ \runner ->
+  alloca $ \p -> runner $ do
+    success <- liftIO $ W.c_GetConsoleMode conHandle p
+    if success
+    then liftIO $ peek p
+    else w32Fail "getConsoleMode failed."
+
 setConsoleMode :: (MonadIO m, MonadThrow m)
   => W.HANDLE -> W.ConsoleMode -> m ()
 setConsoleMode conHandle (W.ConsoleMode flag) = do
@@ -65,12 +73,11 @@ getLastError :: MonadIO m => m W.DWORD
 getLastError = liftIO W.c_GetLastError
 
 formatMessage :: MonadIO m => W.DWORD -> m String
-formatMessage err = do
-  liftIO $ alloca $ \p -> do
-    let flags = W.FORMAT_MESSAGE_ALLOCATE_BUFFER .|. W.FORMAT_MESSAGE_FROM_SYSTEM
-    written <- W.c_FormatMessageW flags 0 err 0 (castPtr p) 0 0
-    ps <- peek p
-    if written == 0 then return "" else peekCWString (castPtr ps)
+formatMessage err = liftIO $ alloca $ \p -> do
+  let flags = W.FORMAT_MESSAGE_ALLOCATE_BUFFER .|. W.FORMAT_MESSAGE_FROM_SYSTEM
+  written <- W.c_FormatMessageW flags 0 err 0 (castPtr p) 0 0
+  ps <- peek p
+  if written == 0 then return "" else peekCWString (castPtr ps)
 
 -- DLL
 
@@ -92,7 +99,7 @@ getCurrentThreadId = liftIO W.c_GetCurrentThreadId
 
 -- bracket
 
-bracketWin32 :: (MonadIO m, MonadUnliftIO m) => m a -> m a
+bracketWin32 :: MonadUnliftIO m => m a -> m a
 bracketWin32 act = do
   nam <- try act
   case nam of
@@ -105,6 +112,13 @@ bracketWin32 act = do
       throwM e
 
 -- user32
+
+messageBox :: MonadIO m => String -> String -> m Int
+messageBox text caption = liftIO .
+  withCWString text $ \cText-> do
+    withCWString caption $ \cCaption -> do
+      res <- W.c_MessageBoxW W.nullHANDLE cText cCaption 0
+      return $ fromIntegral res
 
 -- Hook
 
@@ -232,6 +246,6 @@ getKeyNameText lParam =
 getKeyState :: MonadIO m => CInt -> m W.SHORT
 getKeyState = liftIO . W.c_GetKeyState
 
-mapVirtualKey :: MonadIO m => Integral a => a -> W.UINT -> m W.UINT
+mapVirtualKey :: (MonadIO m, Integral a) => a -> W.UINT -> m W.UINT
 mapVirtualKey uCode uMapType =
   liftIO $ W.c_MapVirtualKeyW (fromIntegral uCode) uMapType

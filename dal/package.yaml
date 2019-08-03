@@ -37,12 +37,6 @@ library:
     - rio
     - winapi-kernel32-sys
     - winapi-user32-sys
-  when:
-    - condition: os(windows) && arch(i386)
-      then:
-        cpp-options: -DWINDOWS_CCONV=stdcall
-      else:
-        cpp-options: -DWINDOWS_CCONV=ccall
 
 executable:
   main: app/Main.hs
